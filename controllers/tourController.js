@@ -28,8 +28,20 @@ exports.checkID = (req, res, next, val) => {
 
 exports.getAllTours = async (req, res) => {
     try {
-        const tours = await Tour.find();
-    
+        //BUILD QUERY
+        const queryObj = {...req.query};
+        const deletedObjs = ["limit", "page", "sort", "fields"];
+        deletedObjs.forEach(el => delete queryObj[el]);
+
+        const query = Tour.find(queryObj);
+
+        //SAME FUNCTION AS UP (API)
+        // const query = Tour.find().where("duration").equals(5).where("difficulty").equals("easy");
+        
+        //EXECUTE QUERY
+        const tours = await query;
+
+        // SEND RESPONSE
         res.status(200).json({
             status: "Success",
             results: tours.length,
@@ -82,7 +94,7 @@ exports.createTour = async (req, res) => {
     } catch (err) {
         res.status(400).json({
             status: "fail",
-            message: "Invalid data entered"
+            message: err
         })
     }
 };
@@ -93,7 +105,6 @@ exports.updateTour = async (req, res) => {
             new: true,
             runValidators: true
         });
-
         res.status(200).json({
             status: "success",
             data: {
@@ -108,8 +119,6 @@ exports.updateTour = async (req, res) => {
     }
 };
    
-
-
 exports.deleteTour = async (req, res) => {
     try {
         await Tour.findByIdAndDelete(req.params.id);
