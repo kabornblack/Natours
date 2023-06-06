@@ -29,13 +29,18 @@ exports.checkID = (req, res, next, val) => {
 exports.getAllTours = async (req, res) => {
     try {
         //BUILD QUERY
-        const queryObj = {...req.query};
+        //1) FILTERING
+        const queryObj = { ...req.query };
         const deletedObjs = ["limit", "page", "sort", "fields"];
         deletedObjs.forEach(el => delete queryObj[el]);
 
-        const query = Tour.find(queryObj);
+        //2) ADVANCE FILTERING
+        let queryStr = JSON.stringify(queryObj);
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+        console.log(JSON.parse(queryStr));
 
-        //SAME FUNCTION AS UP (API)
+        const query = Tour.find(JSON.parse(queryStr));
+
         // const query = Tour.find().where("duration").equals(5).where("difficulty").equals("easy");
         
         //EXECUTE QUERY
