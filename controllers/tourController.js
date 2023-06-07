@@ -3,16 +3,23 @@ const Tour = require("./../models/tourModel");
 
 // const tours = JSON.parse(fs.readFileSync(`${__dirname}/../starter/dev-data/data/tours-simple.json`));
 
-exports.checkID = (req, res, next, val) => {
-    console.log(`The next value is ${val}`);
-    if (req.params.id * 1 > tours.length) {
-        return res.status(404).json({
-            status: "fail",
-            message: "Cant find ID"
-        });
-    }
+exports.aliasTopTours = (req, res, next) => {
+    req.query.limit = "5";
+    req.query.sort = "-ratingsAverage";
+    req.query.fields = "name,price,ratingsaverage,summary,difficulty,duration";
     next();
 };
+
+// exports.checkID = (req, res, next, val) => {
+//     console.log(`The next value is ${val}`);
+//     if (req.params.id * 1 > tours.length) {
+//         return res.status(404).json({
+//             status: "fail",
+//             message: "Cant find ID"
+//         });
+//     }
+//     next();
+// };
 
 // Just leave here for ref
 
