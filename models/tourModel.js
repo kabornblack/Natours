@@ -23,7 +23,7 @@ const tourSchema = new mongoose.Schema({
         type: Number,
         default: 4.5
     },
-    ratingQuantity: {
+    ratingsQuantity: {
         type: Number,
         default: 0
     },
@@ -50,10 +50,19 @@ const tourSchema = new mongoose.Schema({
     //An array of strings
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now(),
+        //SELECT NOT TO DISPLAY TO THE CLIENT
+        select: false
     },
-    startDate: [Date]
+    startDates: [Date]
     //An array of dates
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true}
+});
+
+tourSchema.virtual("durationWeeks").get(function() {
+    return this.duration / 7;
 });
 
 const Tour = mongoose.model("Tour", tourSchema);
