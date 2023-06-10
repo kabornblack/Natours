@@ -58,8 +58,11 @@ const tourSchema = new mongoose.Schema({
         //SELECT NOT TO DISPLAY TO THE CLIENT
         select: false
     },
-    startDates: [Date]
-    //An array of dates
+    startDates: [Date], //An array of dates
+    secretTour: {
+        type: Boolean,
+        default: false
+    },
 }, {
     toJSON: { virtuals: true },
     toObject: { virtuals: true}
@@ -75,16 +78,29 @@ tourSchema.pre("save", function(next) {
     next()
 });
 
-tourSchema.pre("save", function(next) {
-    console.log("Will save this doc...");
+// tourSchema.pre("save", function(next) {
+//     console.log("Will save this doc...");
+//     next();
+// });
+
+// tourSchema.post("save", function(doc, next) {
+//     console.log(doc);
+//     next();
+// });
+
+// QUERY MIDDLEWARE:
+//tourSchema.pre("find", function(next) { //This will work with only findMany
+tourSchema.pre(/^find/, function(next) { //Works on all query that starts with find(findOne, fineMany, findAndDelete) etc
+    this.find( { secretTour: {$ne: true } });
+    this.start = Date.now();
     next();
 });
 
-tourSchema.post("save", function(doc, next) {
-    console.log(doc);
-    next();
+tourSchema.post(/^find/, function(docs, next) {
+    console.log(`Query took ${Date.now() - this.start} milliseconds`);
+    console.log(docs)
+        next();
 });
-
 const Tour = mongoose.model("Tour", tourSchema);
 
 module.exports = Tour;
