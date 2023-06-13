@@ -1,6 +1,18 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
+//Best practice to place the Uncaught exception before any code is run
+process.on("uncaughtException", err => {
+  console.log("UUNCAUGHT EXCEPTION!. App shutting down...");
+  console.log(err.name, err.message);
+  process.exit(1); // Best practice for uncaught exception
+
+  //EVEN IF THIS WILL WOTK BUT ITS NOT GOOD TO CALL A VARIABLE BEFORE IT WAS DECLEARED
+  // server.close(() => {
+  //   process.exit(1); // Best practice for uncaught exception
+  // });
+});
+
 dotenv.config({path: "./config.env"});
 const app = require("./app");
 
@@ -20,9 +32,14 @@ const server = app.listen(port, () => {
 });
 
 process.on("unhandledRejection", err => {
-  console.log(err.name, err.message);
   console.log("UNHANDLED REJECTION!. App shutting down...");
+  console.log(err.name, err.message);
   server.close(() => {
-    process.exit(1);
-  })
+    process.exit(1); // Optional for unhandled rejection
+  });
 });
+
+console.log(x);
+
+
+
