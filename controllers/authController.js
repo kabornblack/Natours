@@ -1,9 +1,17 @@
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModel");
 const catchAsync = require("./../utils/catchAsync");
+const AppError = require("./../utils/appError");
 
+const expiresIn = 3600;
 
-exports.signup = catchAsync(async (req, res, next) => {
+const signToken = id => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: expiresIn
+    });
+}
+
+exports.signup = catchAsync( async (req, res, next) => {
     const newUser = await User.create(req.body);
 
     //THIS WILL BE THE BEST PRACTICE TO SIGN UP USER AS NORMAL AND THEN WE CAN CADD ADMIN ROLE ON MONGODB IF THEY ARE TO BE SIGNED AS ADMIN
@@ -14,8 +22,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     //     passwordConfirmed: req.body.passwordConfirmed
     // });
 
-    const expiresIn = 3600;
-    const token = jwt.sign({ id: newUser._id}, process.env.JWT_SECRET, {
+    const token = jwt.sign(newUser._id, process.env.JWT_SECRET, {
         expiresIn: expiresIn
     });
 
@@ -25,5 +32,32 @@ exports.signup = catchAsync(async (req, res, next) => {
         data: {
             user: newUser
         }
+    });
+});
+
+exports.login = catchAsync( async (req, res, next) => {
+    //const email = req.body.email;
+    //const password = req.body.password;
+    //USE OBJECT DESTRUCTURING BELLOW
+    const { email, password } = req.body;
+
+    //1) Check if email and password is exist
+    if (!email || !password) {
+        return next(new AppError("Please provide a valid email and password", 400)); 
+    };
+
+    //2) Check if user exist && password is correct
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user || !await user.correctPassword(password, user.password)) {
+        return next(new AppError("Incorrect email or password!", 401));
+    };
+    
+    //3) If everything is ok, send token to the client
+    const token = signToken(user._id);
+
+    res.status(200).json({
+        status: "successful",
+        token
     });
 });
