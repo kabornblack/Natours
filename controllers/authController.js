@@ -13,22 +13,22 @@ const signToken = id => {
 }
 
 exports.signup = catchAsync( async (req, res, next) => {
-    const newUser = await User.create(req.body);
+    // const newUser = await User.create(req.body);
 
     //THIS WILL BE THE BEST PRACTICE TO SIGN UP USER AS NORMAL AND THEN WE CAN CADD ADMIN ROLE ON MONGODB IF THEY ARE TO BE SIGNED AS ADMIN
-    // const newUser = await User.create({
-    //     name: req.body.name,
-    //     email: req.body.email,
-    //     password: req.body.password,
-    //     passwordConfirmed: req.body.passwordConfirmed
-    // });
+    const newUser = await User.create({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+        passwordConfirmed: req.body.passwordConfirmed
+    });
 
-    const token = jwt.sign(newUser._id, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
         expiresIn: expiresIn
     });
 
     res.status(201).json({
-        status: "successfull",
+        status: "success",
         token,
         data: {
             user: newUser
@@ -77,18 +77,28 @@ exports.protect = catchAsync ( async (req, res, next) => {
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
     //3)Check if user still exist
-    const freshUser = await User.findById(decoded.id);
-    if (!freshUser) {
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
         return next(new AppError("The user belonging to this token does no longer exist.", 401));
     }
 
 
     //4) Check if user change password after the JWT was issued
-    if(freshUser.changePasswordAfter(decoded.iat)) {
+    if(currentUser.changePasswordAfter(decoded.iat)) {
         return next(new AppError("User recently changed password! please log in again", 401));
     };
 
     //GRANT ACCESS TO PROTECTED ROUTE
-    req.user = freshUser;
+    req.user = currentUser;
     next();
 });
+
+exports.restrictTo = (...roles) => {
+    return (req, res, next) => {
+        if(!roles.includes(req.user.role)) {
+            return next(new AppError("You do not have permission to perform this action", 403));
+        }
+
+        next();
+    };
+};
