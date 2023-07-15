@@ -20,7 +20,8 @@ exports.signup = catchAsync( async (req, res, next) => {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        passwordConfirmed: req.body.passwordConfirmed
+        passwordConfirmed: req.body.passwordConfirmed,
+        role: req.body.role
     });
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
@@ -102,3 +103,4 @@ exports.restrictTo = (...roles) => {
         next();
     };
 };
+
